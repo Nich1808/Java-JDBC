@@ -7,6 +7,7 @@ import istad.model.Product;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ProductDaoImpl implements ProductDao {
 
@@ -17,6 +18,7 @@ public class ProductDaoImpl implements ProductDao {
         conn = DbConfig.getInstance();
     }
 
+    //insert
     @Override
     public int save(Product product) throws SQLException {
         //TODO
@@ -40,9 +42,9 @@ public class ProductDaoImpl implements ProductDao {
         return pstmt.executeUpdate();
     }
 
-
+    //delete
     @Override
-    public int deleteById(String code) throws  SQLException{
+    public int deleteByCode(String code) throws  SQLException{
         String sql = "DELETE FROM products WHERE code = ?";
         PreparedStatement pstm = conn.prepareStatement(sql);
         pstm.setString(1,code);
@@ -53,6 +55,68 @@ public class ProductDaoImpl implements ProductDao {
         return 0;
     }
 
+    //update
+
+    @Override
+    public boolean existsByCode(String code) throws SQLException{
+        //define sql
+        final String SQL = """
+                SELECT EXISTS(SELECT code WHERE code = ?
+                );
+                """;
+        //create statemenet object
+        PreparedStatement pstmt = conn.prepareStatement(SQL);
+        pstmt.setString(1, code);
+        return pstmt.execute(SQL);
+    }
+
+    @Override
+    public Optional<Product> findByCode(String code) throws SQLException {
+        //define sql
+        final String SQL = """
+                SELECT * 
+                FROM products
+                WHERE code = ?
+                """;
+        //create
+        PreparedStatement pstmt = conn.prepareStatement(SQL);
+        pstmt.setString(1, code);
+        ResultSet rs =pstmt.executeQuery();
+        Product product;
+        if (rs.next()) {
+            product = new Product();
+            product.setId(rs.getInt("id"));
+            product.setCode(rs.getString("code"));
+            product.setName(rs.getString("name"));
+            product.setPrice(rs.getBigDecimal("price"));
+            product.setQty(rs.getInt("qty"));
+            product.setDeleted(rs.getBoolean("is_deleted"));
+            return Optional.of(product);
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public int updateByCode(String code, Product product) throws SQLException {
+        //Define sql
+        final String SQL = """
+                UPDATE products 
+                SET name = ?, price = ?, qty = ? 
+                WHERE code = ?
+                """;
+
+        //Create statement object
+        PreparedStatement pstmt = conn.prepareStatement(SQL);
+        pstmt.setString(1, product.getName());
+        pstmt.setBigDecimal(2, product.getPrice());
+        pstmt.setInt(3,product.getQty());
+        pstmt.setString(4, code);
+
+        return pstmt.executeUpdate();
+    }
+
+    //findAll
     @Override
     public List<Product> findAll() throws SQLException {
 

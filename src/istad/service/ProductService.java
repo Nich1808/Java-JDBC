@@ -8,8 +8,9 @@ public interface ProductService {
 
     void save(Product product);
 
+    void deleteByCode(String code);
 
-    void deleteById(String code);
+    void updateByCode(String code, Product product);
 
     List<Product> findAll();
 }

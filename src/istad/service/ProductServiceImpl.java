@@ -15,6 +15,7 @@ public class ProductServiceImpl implements ProductService{
         productDao = new ProductDaoImpl();
     }
 
+    //insert
     @Override
     public void save(Product product) {
         try {
@@ -25,10 +26,12 @@ public class ProductServiceImpl implements ProductService{
             throw new RuntimeException(e);
         }
     }
+
+    //delete
     @Override
-    public void deleteById(String code) {
+    public void deleteByCode(String code) {
         try {
-            int affectedRow = productDao.deleteById(code);
+            int affectedRow = productDao.deleteByCode(code);
             if(affectedRow > 0){
                 System.out.println("Deleted Succesfull!");
             }
@@ -37,6 +40,38 @@ public class ProductServiceImpl implements ProductService{
         }
     }
 
+    //update
+    @Override
+    public void updateByCode(String code, Product product) {
+        try{
+            ////style 1 : validate product existing or not by code
+            // if(!productDao.existsByCode(code))
+            // throw new RuntimeException("Product code doesn't exist...!");
+
+            //style2 : validate product existing or not by code
+            Product existingProduct = productDao.findByCode(code)
+                    .orElseThrow(() ->new RuntimeException("Product code doesn't exist"));
+            //name, price, qty(Partially update)
+            if (!product.getName().isBlank())
+                existingProduct.setName(product.getName());
+
+            if(product.getPrice() != null)
+                existingProduct.setPrice(product.getPrice());
+
+            if(product.getQty() != null)
+                existingProduct.setQty(product.getQty());
+
+            int affectedRow = productDao.updateByCode(code, existingProduct);
+            if(affectedRow < 1){
+                System.out.println("Updated operation failed");
+            }
+        }catch(SQLException e){
+            System.out.println(e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    //findAll
     @Override
     public List<Product> findAll() {
         try{
